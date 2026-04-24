@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAANG Prep Tracker</title>
+    <style>
+        /* --- Custom CSS --- */
+        :root {
+            --bg-main: #0f172a;      
+            --bg-card: #1e293b;      
+            --bg-input: #334155;     
+            --text-main: #f1f5f9;    
+            --text-muted: #94a3b8;   
+            --primary: #3b82f6;      
+            --primary-hover: #2563eb;
+            --danger: #ef4444;       
+            --danger-hover: #dc2626;
+            --border: #475569;
+            
+            --easy: #4ade80;         
+            --medium: #facc15;       
+            --hard: #f87171;         
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        /* --- Header & Grid Layout --- */
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin: 0;
+            font-size: 2.5rem;
+        }
+
+        .layout-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 380px 1fr; /* Slightly wider sidebar for daily text */
+            gap: 2rem;
+            align-items: start; 
+        }
+
+        /* Left Panel - Sticky */
+        .sidebar {
+            position: sticky;
+            top: 2rem; 
+            max-height: 90vh;
+            overflow-y: auto; /* Adds scroll to sidebar if it gets too long */
+            padding-right: 0.5rem;
+        }
+
+        /* Custom Scrollbar for Sidebar */
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-track { background: var(--bg-main); }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* --- Shared Card Styles --- */
+        .card {
+            background-color: var(--bg-card);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        /* --- Accordion Styles for Study Plan --- */
+        details {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        summary {
+            padding: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        summary:hover {
+            color: var(--primary);
+        }
+
+        details .content {
+            padding: 0 1.25rem 1.25rem 1.25rem;
+            color: var(--text-muted);
+            font-size: 0.85rem; /* Slightly smaller text for daily list */
+        }
+
+        details .content ul {
+            margin: 0.5rem 0 0 0;
+            padding-left: 0;
+            list-style-type: none;
+        }
+
+        details .content li {
+            margin-bottom: 0.6rem;
+        }
+
+        .week-header {
+            color: var(--primary);
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            border-bottom: 1px dashed var(--border);
+            padding-bottom: 0.25rem;
+        }
+
+        /* --- Checkbox Styling --- */
+        .task-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .task-label input[type="checkbox"] {
+            margin-top: 0.2rem;
+            cursor: pointer;
+            width: 14px;
+            height: 14px;
+            accent-color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .task-label input[type="checkbox"]:checked + .task-text {
+            text-decoration: line-through;
+            color: var(--border);
+            opacity: 0.7;
+        }
+
+        .task-text {
+            transition: all 0.2s ease;
+            line-height: 1.4;
+        }
+        
+        .task-text strong {
+            color: var(--text-main);
+        }
+        
+        .task-label input[type="checkbox"]:checked + .task-text strong {
+            color: inherit;
+        }
+
+        /* --- Form & Table Layout (Unchanged) --- */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.full-width { grid-column: span 2; }
+        label { font-size: 0.875rem; margin-bottom: 0.4rem; color: var(--text-muted); font-weight: 500; }
+        input[type="text"], input[type="date"], select { padding: 0.65rem; background-color: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text-main); font-size: 1rem; transition: border-color 0.2s; }
+        input[type="text"]:focus, input[type="date"]:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+        .btn-submit { background-color: var(--primary); color: white; border: none; padding: 0.85rem; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; margin-top: 0.5rem; }
+        .btn-submit:hover { background-color: var(--primary-hover); }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+        th, td { text-align: left; padding: 1rem 0.5rem; border-bottom: 1px solid var(--border); }
+        th { color: var(--text-muted); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .notes-cell { white-space: normal; min-width: 250px; color: var(--text-muted); font-style: italic; font-size: 0.9rem; }
+        .btn-delete { background-color: transparent; color: var(--danger); border: none; padding: 0.25rem 0.5rem; font-size: 0.875rem; cursor: pointer; font-weight: 600; }
+        .btn-delete:hover { color: var(--danger-hover); text-decoration: underline; }
+        .diff-Easy { color: var(--easy); font-weight: 600; }
+        .diff-Medium { color: var(--medium); font-weight: 600; }
+        .diff-Hard { color: var(--hard); font-weight: 600; }
+        .diff-NA { color: var(--text-muted); }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { grid-template-columns: 1fr; }
+            .sidebar { position: static; max-height: none; overflow-y: visible; padding-right: 0; }
+        }
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full-width { grid-column: span 1; }
+            body { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🚀 FAANG Prep Daily Tracker</h1>
+    </div>
+
+    <div class="layout-container">
+        
+        <aside class="sidebar">
+            <div class="card">
+                <h2>🗓️ 16-Week Master Plan</h2>
+                
+                <details open>
+                    <summary>Month 1: DSA & Core Java</summary>
+                    <div class="content">
+                        
+                        <div class="week-header">Week 1: Arrays, Strings & Memory</div>
+                        <ul>
+                            <li><label class="task-label"><input type="checkbox" id="t-d1"><span class="task-text"><strong>Day 1:</strong> Sliding Window & JVM/GC Memory</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d2"><span class="task-text"><strong>Day 2:</strong> Two Pointers & String Pool internals</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d3"><span class="task-text"><strong>Day 3:</strong> Fast/Slow Pointers & OOP/equals()</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d4"><span class="task-text"><strong>Day 4:</strong> Binary Search & Java 8 Streams/Lambdas</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d5"><span class="task-text"><strong>Day 5:</strong> Prefix Sum & Exception Handling</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d6"><span class="task-text"><strong>Day 6:</strong> Review missed problems & Write CLI Script</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d7"><span class="task-text"><strong>Day 7:</strong> Rest ☕</span></label></li>
+                        </ul>
+
+                        <div class="week-header">Week 2: Linked Lists, Queues & Collections</div>
+                        <ul>
+                            <li><label class="task-label"><input type="checkbox" id="t-d8"><span class="task-text"><strong>Day 8:</strong> Reverse Linked Lists & ArrayList vs LinkedList</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d9"><span class="task-text"><strong>Day 9:</strong> Merge/Sort LLs & HashMap Deep Dive</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d10"><span class="task-text"><strong>Day 10:</strong> Monotonic Stack & HashSet/TreeSet</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d11"><span class="task-text"><strong>Day 11:</strong> Queues/Deques & PriorityQueue (Heaps)</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d12"><span class="task-text"><strong>Day 12:</strong> Design LRU Cache & ConcurrentHashMap</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d13"><span class="task-text"><strong>Day 13:</strong> Implement custom HashMap from scratch</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d14"><span class="task-text"><strong>Day 14:</strong> Rest ☕</span></label></li>
+                        </ul>
+
+                        <div class="week-header">Week 3: Trees, BSTs & Threads</div>
+                        <ul>
+                            <li><label class="task-label"><input type="checkbox" id="t-d15"><span class="task-text"><strong>Day 15:</strong> Tree Traversals (DFS) & Thread Lifecycle</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d16"><span class="task-text"><strong>Day 16:</strong> Level Order (BFS) & Synch/Volatile keyword</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d17"><span class="task-text"><strong>Day 17:</strong> Tree Depth/Diameter & wait()/notify()</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d18"><span class="task-text"><strong>Day 18:</strong> Binary Search Trees & ExecutorService</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d19"><span class="task-text"><strong>Day 19:</strong> Tree Construction & Callable/Futures</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d20"><span class="task-text"><strong>Day 20:</strong> Build Multithreaded API Fetcher</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d21"><span class="task-text"><strong>Day 21:</strong> Rest ☕</span></label></li>
+                        </ul>
+
+                        <div class="week-header">Week 4: Graphs & Adv. Concurrency</div>
+                        <ul>
+                            <li><label class="task-label"><input type="checkbox" id="t-d22"><span class="task-text"><strong>Day 22:</strong> Graph Adjacency List & ReentrantLocks</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d23"><span class="task-text"><strong>Day 23:</strong> Matrix BFS & CountDownLatch/CyclicBarrier</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d24"><span class="task-text"><strong>Day 24:</strong> Matrix DFS & Thread-Safe Collections</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d25"><span class="task-text"><strong>Day 25:</strong> Topological Sort & Atomic Variables (CAS)</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d26"><span class="task-text"><strong>Day 26:</strong> Graph Bipartition & Java Memory Model</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d27"><span class="task-text"><strong>Day 27:</strong> 2-Hour Mock Assessment (Arrays, Trees, Graphs)</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="t-d28"><span class="task-text"><strong>Day 28:</strong> Rest & Evaluate Progress ☕</span></label></li>
+                        </ul>
+                    </div>
+                </details>
+
+                <details>
+                    <summary>Month 2: Adv. DSA & HLD</summary>
+                    <div class="content">
+                        <ul>
+                            <li><label class="task-label"><input type="checkbox" id="task-m2-1"><span class="task-text"><strong>DSA:</strong> 1D/2D Dynamic Programming</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="task-m2-2"><span class="task-text"><strong>DSA:</strong> Backtracking, Adv. Graphs (Dijkstra)</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="task-m2-3"><span class="task-text"><strong>System Design:</strong> CAP Theorem, SQL vs. NoSQL</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="task-m2-4"><span class="task-text"><strong>System Design:</strong> Consistent Hashing, Caching</span></label></li>
+                        </ul>
+                    </div>
+                </details>
+
+                <details>
+                    <summary>Month 3: LLD & Behavioral</summary>
+                    <div class="content">
+                        <ul>
+                            <li><label class="task-label"><input type="checkbox" id="task-m3-1"><span class="task-text"><strong>LLD:</strong> Patterns (Singleton, Factory, Strategy)</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="task-m3-2"><span class="task-text"><strong>LLD:</strong> SOLID Principles, Object-Oriented Design</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="task-m3-3"><span class="task-text"><strong>Behavioral:</strong> STAR stories (Leadership/Deadlines)</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="task-m3-4"><span class="task-text"><strong>Behavioral:</strong> STAR stories (Conflicts/Failures)</span></label></li>
+                        </ul>
+                    </div>
+                </details>
+
+                <details>
+                    <summary>Month 4: Grind & Polish</summary>
+                    <div class="content">
+                        <ul>
+                            <li><label class="task-label"><input type="checkbox" id="task-m4-1"><span class="task-text"><strong>Mocks:</strong> Complete 3 peer-to-peer interviews</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="task-m4-2"><span class="task-text"><strong>Timed:</strong> Consistently hit 45 mins/Hard</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="task-m4-3"><span class="task-text"><strong>Timed:</strong> Consistently hit 20 mins/Medium</span></label></li>
+                            <li><label class="task-label"><input type="checkbox" id="task-m4-4"><span class="task-text"><strong>Review:</strong> Revisit weak areas in HLD & Java</span></label></li>
+                        </ul>
+                    </div>
+                </details>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="card">
+                <h2>Log a Problem or Topic</h2>
+                <form id="tracker-form" class="form-grid">
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="problem">Topic / Problem Name</label>
+                        <input type="text" id="problem" required placeholder="e.g., Two Sum or Multithreading">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category">
+                            <option value="DSA">DSA</option>
+                            <option value="System Design">System Design</option>
+                            <option value="Java Core">Java Core</option>
+                            <option value="Behavioral">Behavioral</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="difficulty">Difficulty</label>
+                        <select id="difficulty">
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                            <option value="NA">N/A (Theory)</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="notes">Notes / Key Takeaways</label>
+                        <input type="text" id="notes" placeholder="What did you learn? E.g., Use a HashMap to drop complexity to O(N)">
+                    </div>
+                    <div class="form-group full-width">
+                        <button type="submit" class="btn-submit">Add Entry</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Your Progress</h2>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Problem/Topic</th>
+                                <th>Category</th>
+                                <th>Difficulty</th>
+                                <th>Notes</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <script>
+        // --- CHECKBOX LOGIC (Study Plan Progress) ---
+        const checkboxes = document.querySelectorAll('.sidebar input[type="checkbox"]');
+        const savedProgress = JSON.parse(localStorage.getItem('faangStudyPlanProgress')) || {};
+
+        checkboxes.forEach(box => {
+            if (savedProgress[box.id]) {
+                box.checked = true;
+            }
+            box.addEventListener('change', function() {
+                savedProgress[this.id] = this.checked;
+                localStorage.setItem('faangStudyPlanProgress', JSON.stringify(savedProgress));
+            });
+        });
+
+        // --- TABLE LOGIC (Daily Logs) ---
+        document.getElementById('date').valueAsDate = new Date();
+
+        const form = document.getElementById('tracker-form');
+        const tableBody = document.getElementById('table-body');
+        
+        let entries = JSON.parse(localStorage.getItem('faangTracker')) || [];
+
+        function renderTable() {
+            tableBody.innerHTML = '';
+            entries.forEach((entry, index) => {
+                const row = document.createElement('tr');
+                
+                let diffClass = `diff-${entry.difficulty}`;
+                if (entry.difficulty === 'N/A (Theory)') diffClass = 'diff-NA';
+
+                row.innerHTML = `
+                    <td>${entry.date}</td>
+                    <td style="font-weight: 500;">${entry.problem}</td>
+                    <td>${entry.category}</td>
+                    <td class="${diffClass}">${entry.difficulty === 'NA' ? 'N/A' : entry.difficulty}</td>
+                    <td class="notes-cell">${entry.notes}</td>
+                    <td>
+                        <button type="button" onclick="deleteEntry(${index})" class="btn-delete">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            
+            const newEntry = {
+                date: document.getElementById('date').value,
+                problem: document.getElementById('problem').value,
+                category: document.getElementById('category').value,
+                difficulty: document.getElementById('difficulty').value,
+                notes: document.getElementById('notes').value
+            };
+            entries.push(newEntry);
+            localStorage.setItem('faangTracker', JSON.stringify(entries));
+            
+            renderTable();
+            document.getElementById('problem').value = '';
+            document.getElementById('notes').value = '';
+            document.getElementById('problem').focus(); 
+        });
+
+        function deleteEntry(index) {
+            entries.splice(index, 1);
+            localStorage.setItem('faangTracker', JSON.stringify(entries));
+            renderTable();
+        }
+
+        renderTable();
+    </script>
+</body>
+</html>
